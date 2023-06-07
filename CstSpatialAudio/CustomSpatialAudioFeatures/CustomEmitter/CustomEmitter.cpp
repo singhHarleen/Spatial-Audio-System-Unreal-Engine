@@ -91,6 +91,10 @@ void ACustomEmitter::CheckObstruction()
                 {
                     TargetLowPassFrequency = 100.0f;
                 }
+
+                FString DebugText = FString::Printf(TEXT("Material: %s"), *HitMaterial->GetName());
+                DrawDebugString(GetWorld(), SphereLocation + FVector(0,0,100), DebugText, nullptr,
+                                FColor::Red, ObstructionCheckInterval);
             }
         }
         else
