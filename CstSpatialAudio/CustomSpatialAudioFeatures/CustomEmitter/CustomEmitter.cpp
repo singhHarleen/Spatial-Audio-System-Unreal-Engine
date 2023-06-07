@@ -29,7 +29,8 @@ void ACustomEmitter::BeginPlay()
 void ACustomEmitter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    DrawDebugSphere(GetWorld(), GetActorLocation(), 2500, 50, FColor::Green, false, -1, 0, 20);
+    DrawDebugSphere(GetWorld(), GetActorLocation(), AudioComponent->AttenuationOverrides.FalloffDistance, 50,
+                    FColor::Green, false, -1, 0, 1);
     
     elapsedTime += DeltaTime;
     float LerpRatio = FMath::Clamp(elapsedTime / transitionTime, 0.0f, 1.0f);
@@ -62,40 +63,40 @@ void ACustomEmitter::CheckObstruction()
 
         if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, TraceParams))
         {
-            // Something is blocking the sound
             float SphereOffsetFactor = 0.2f; 
             FVector SphereLocation = FMath::Lerp(Hit.ImpactPoint, End, SphereOffsetFactor);
-            DrawDebugSphere(GetWorld(), SphereLocation, 50.0f, 32, FColor::Purple, false, ObstructionCheckInterval);
-            
+            DrawDebugSphere(GetWorld(), SphereLocation, 50.0f, 32,
+                            FColor::Purple, false, ObstructionCheckInterval);
+
             // Check the physical material of the hit object
             UPhysicalMaterial* HitMaterial = Hit.PhysMaterial.Get();
+            FColor DebugLineColor = FColor::Red;
             if (HitMaterial != nullptr)
             {
-                if (HitMaterial->GetName().Equals("Fence"))
+                
+                if (HitMaterial->GetName().Equals("Metal"))
                 {
-                    TargetLowPassFrequency = 20000.0f;
-                }
-                else if (HitMaterial->GetName().Equals("Metal"))
-                {
-                    TargetLowPassFrequency = 10000.0f; // Some filtering
+                    TargetLowPassFrequency = 10000.0f;
+                    DebugLineColor = FColor::Green;
                 }
                 else if (HitMaterial->GetName().Equals("Wood"))
                 {
                     TargetLowPassFrequency = 1000.0f;
+                    DebugLineColor = FColor::Green;
                 }
-                else if (HitMaterial->GetName().Equals("Glass"))
+                else if (HitMaterial->GetName().Equals("Concrete"))
                 {
                     TargetLowPassFrequency = 7000.0f;
+                    DebugLineColor = FColor::Green;
                 }
-                else
-                {
-                    TargetLowPassFrequency = 100.0f;
-                }
-
+                
                 FString DebugText = FString::Printf(TEXT("Material: %s"), *HitMaterial->GetName());
                 DrawDebugString(GetWorld(), SphereLocation + FVector(0,0,100), DebugText, nullptr,
                                 FColor::Red, ObstructionCheckInterval);
             }
+            
+            // DrawDebugLine(GetWorld(), Start, End, DebugLineColor, false,
+            //        ObstructionCheckInterval, 0, 0.1);
         }
         else
         {
