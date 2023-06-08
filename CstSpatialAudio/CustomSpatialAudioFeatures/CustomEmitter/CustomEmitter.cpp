@@ -51,10 +51,10 @@ void ACustomEmitter::CheckObstruction()
     FVector Start = GetActorLocation();
 
     APlayerCameraManager* PCM = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
-    FVector End = PCM->GetCameraLocation(); // For head location, add a Z offset based on your character's height
+    FVector End = PCM->GetCameraLocation(); 
     float Distance = FVector::Dist(Start, End);
 
-    if (Distance <= 2500)
+    if (Distance <= 2500) // Need to get the fall off distance here
     {
         FCollisionQueryParams TraceParams;
         TraceParams.bTraceComplex = true;
@@ -91,8 +91,9 @@ void ACustomEmitter::CheckObstruction()
                 }
                 
                 FString DebugText = FString::Printf(TEXT("Material: %s"), *HitMaterial->GetName());
+                
                 DrawDebugString(GetWorld(), SphereLocation + FVector(0,0,100), DebugText, nullptr,
-                                FColor::Red, ObstructionCheckInterval);
+                                FColor::Yellow, ObstructionCheckInterval);
             }
             
             // DrawDebugLine(GetWorld(), Start, End, DebugLineColor, false,
