@@ -1,5 +1,6 @@
 #include "CustomEmitter.h"
 #include "CoreMinimal.h"
+#include "VectorTypes.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
@@ -37,7 +38,10 @@ void ACustomEmitter::Tick(float DeltaTime)
 void ACustomEmitter::CheckObstruction()
 {
     APlayerCameraManager* PCM = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
-    if(CameraCacheLocation != PCM->GetCameraLocation())
+
+    float dist = UE::Geometry::Distance(PCM->GetCameraLocation(), AudioComponent->GetComponentLocation());
+    bool isInRadius = AudioComponent->AttenuationOverrides.FalloffDistance >= dist;
+    if(CameraCacheLocation != PCM->GetCameraLocation() && isInRadius)
     {
         CameraCacheLocation = PCM->GetCameraLocation();
         TArray<FHitResult> HitResults1, HitResults2, HitResults3;
@@ -77,7 +81,7 @@ void ACustomEmitter::CheckObstruction()
         bool isOneLineHit = false;
         bool isTwoLineHit = false;
         bool isThreeLineHit = false;
-
+        
         if (bHit1 && bHit2 || bHit2 && bHit3 || bHit1 && bHit3)
             isTwoLineHit = true;
 

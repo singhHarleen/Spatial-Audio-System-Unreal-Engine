@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EmitterSpawn.h"
 #include "GameFramework/Actor.h"
 #include "CustomEmitter.generated.h"
 
