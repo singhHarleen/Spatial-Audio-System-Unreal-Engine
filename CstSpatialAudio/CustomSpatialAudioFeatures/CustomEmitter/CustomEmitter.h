@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EmitterSpawn.h"
 #include "GameFramework/Actor.h"
 #include "CustomEmitter.generated.h"
 
@@ -12,12 +13,9 @@ class CSTSPATIALAUDIO_API ACustomEmitter : public AActor
 	GENERATED_BODY()
 public:	
 	ACustomEmitter();
-	
 	virtual void Tick(float DeltaTime) override;
-	
 	void CheckObstruction();
-	
-	float ObstructionCheckInterval = 0.1f; 
+	float ObstructionCheckInterval; 
 
 protected:
 
@@ -28,16 +26,16 @@ protected:
 
 	UPROPERTY()
 	float TargetLowPassFrequency;
-
 	UPROPERTY()
 	float InterpolationAlpha;
-
 	UPROPERTY()
 	float prevTargetFrequency;
-
 	UPROPERTY()
-	float transitionTime = 5.0f;
-
+	float transitionTime;
 	UPROPERTY()
 	float elapsedTime = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
+	bool DrawSphereAndLines = false;
+	FTimerHandle CheckObstructionTimer;
+	FVector CameraCacheLocation;
 };

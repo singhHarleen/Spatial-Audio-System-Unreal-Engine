@@ -1,108 +1,124 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "CustomEmitter.h"
 #include "CoreMinimal.h"
-#include "MathUtil.h"
 #include "GameFramework/Actor.h"
-#include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
-#include "NavigationSystem.h"
 #include "Components/AudioComponent.h"
-#include "PhysicalMaterials/PhysicalMaterial.h"
 
-ACustomEmitter::ACustomEmitter()
+ACustomEmitter::ACustomEmitter() :
+ObstructionCheckInterval(1.0f),
+TargetLowPassFrequency(20000.0f),
+InterpolationAlpha(0.0f),
+prevTargetFrequency(0.0f),
+transitionTime(1.0f)
 {
-	PrimaryActorTick.bCanEverTick = true;
-	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
-
-    TargetLowPassFrequency = 20000.0f;
-    InterpolationAlpha = 0.0f;
-    prevTargetFrequency = 0.0f;
+    PrimaryActorTick.bCanEverTick = true;
+    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
 }
 void ACustomEmitter::BeginPlay()
 {
     Super::BeginPlay();
-
-    GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ACustomEmitter::CheckObstruction);
+    GetWorld()->GetTimerManager().SetTimer(CheckObstructionTimer,this, &ACustomEmitter::CheckObstruction, 0.25f, true);
     AudioComponent->SetLowPassFilterEnabled(true);
 }
 
 void ACustomEmitter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    DrawDebugSphere(GetWorld(), GetActorLocation(), AudioComponent->AttenuationOverrides.FalloffDistance, 50,
-                    FColor::Green, false, -1, 0, 1);
-    
     elapsedTime += DeltaTime;
-    float LerpRatio = FMath::Clamp(elapsedTime / transitionTime, 0.0f, 1.0f);
+    const float LerpRatio = FMath::Clamp(elapsedTime / transitionTime, 0.0f, 1.0f);
     prevTargetFrequency = FMath::Lerp(prevTargetFrequency, TargetLowPassFrequency, LerpRatio);
     AudioComponent->SetLowPassFilterFrequency(prevTargetFrequency);
-
     if (LerpRatio >= 1.0f)
     {
         elapsedTime = 0.0f;
     }
-
-    UE_LOG(LogTemp, Warning, TEXT("Current Frequency: %f"), prevTargetFrequency);
 }
 
 void ACustomEmitter::CheckObstruction()
 {
-    FHitResult Hit;
-    FVector Start = GetActorLocation();
-
     APlayerCameraManager* PCM = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
-    FVector End = PCM->GetCameraLocation(); 
-    float Distance = FVector::Dist(Start, End);
-
-    if (Distance <= 2500) // Need to get the fall off distance here
+    if(CameraCacheLocation != PCM->GetCameraLocation())
     {
-        FCollisionQueryParams TraceParams;
-        TraceParams.bTraceComplex = true;
-        TraceParams.bReturnPhysicalMaterial = true; 
-        TraceParams.AddIgnoredActor(this);
+        CameraCacheLocation = PCM->GetCameraLocation();
+        TArray<FHitResult> HitResults1, HitResults2, HitResults3;
 
-        if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, TraceParams))
+        FVector Start = GetActorLocation();
+        FVector End = PCM->GetCameraLocation(); 
+        float Distance = FVector::Dist(Start, End);
+
+        FVector CameraRightVector = PCM->GetActorRightVector();
+        float YourDesiredOffset = 100.0f;
+
+        FVector Offset = CameraRightVector * YourDesiredOffset;
+
+        FVector Start1 = Start - Offset;
+        FVector End1 = End - Offset;
+
+        FVector Start2 = Start;
+        FVector End2 = End;
+
+        FVector Start3 = Start + Offset;
+        FVector End3 = End + Offset;
+
+        ECollisionChannel AudioTraceChannel = ECollisionChannel::ECC_GameTraceChannel1;
+
+        bool bHit1 = GetWorld()->LineTraceMultiByChannel(HitResults1, Start1, End1, AudioTraceChannel);
+        bool bHit2 = GetWorld()->LineTraceMultiByChannel(HitResults2, Start2, End2, AudioTraceChannel);
+        bool bHit3 = GetWorld()->LineTraceMultiByChannel(HitResults3, Start3, End3, AudioTraceChannel);
+        
+        // Array to store all hit results
+        TArray<TArray<FHitResult>> AllHitResults = {HitResults1, HitResults2, HitResults3};
+        // Array to store all start and end vectors
+        TArray<TPair<FVector, FVector>> AllVectors = {{Start1, End1}, {Start2, End2}, {Start3, End3}};
+
+        int index = 0;
+        const FColor DebugLineColor = FColor::Red;
+
+        bool isOneLineHit = false;
+        bool isTwoLineHit = false;
+        bool isThreeLineHit = false;
+
+        if (bHit1 && bHit2 || bHit2 && bHit3 || bHit1 && bHit3)
+            isTwoLineHit = true;
+
+        if(bHit1 && bHit2 && bHit3)
+            isThreeLineHit = true;
+
+        if (bHit1 || bHit2 || bHit3)
+            isOneLineHit = true;
+        
+        if (isThreeLineHit)
         {
-            float SphereOffsetFactor = 0.2f; 
-            FVector SphereLocation = FMath::Lerp(Hit.ImpactPoint, End, SphereOffsetFactor);
-            DrawDebugSphere(GetWorld(), SphereLocation, 50.0f, 32,
-                            FColor::Purple, false, ObstructionCheckInterval);
-
-            // Check the physical material of the hit object
-            UPhysicalMaterial* HitMaterial = Hit.PhysMaterial.Get();
-            FColor DebugLineColor = FColor::Red;
-            if (HitMaterial != nullptr)
-            {
-                
-                if (HitMaterial->GetName().Equals("Metal"))
-                {
-                    TargetLowPassFrequency = 10000.0f;
-                    DebugLineColor = FColor::Green;
-                }
-                else if (HitMaterial->GetName().Equals("Wood"))
-                {
-                    TargetLowPassFrequency = 1000.0f;
-                    DebugLineColor = FColor::Green;
-                }
-                else if (HitMaterial->GetName().Equals("Concrete"))
-                {
-                    TargetLowPassFrequency = 7000.0f;
-                    DebugLineColor = FColor::Green;
-                }
-                
-                FString DebugText = FString::Printf(TEXT("Material: %s"), *HitMaterial->GetName());
-                
-                DrawDebugString(GetWorld(), SphereLocation + FVector(0,0,100), DebugText, nullptr,
-                                FColor::Yellow, ObstructionCheckInterval);
-            }
-            
-            // DrawDebugLine(GetWorld(), Start, End, DebugLineColor, false,
-            //        ObstructionCheckInterval, 0, 0.1);
+            TargetLowPassFrequency = 2000.0f;
+        }
+        else if(isTwoLineHit)
+        {
+            TargetLowPassFrequency = 4000.0f;
         }
         else
         {
             TargetLowPassFrequency = 20000.0f;
         }
-        GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ACustomEmitter::CheckObstruction);
+        
+        if (isTwoLineHit && DrawSphereAndLines)
+        {
+            for (auto& HitResult : AllHitResults)
+            {
+                if (HitResult.Num() > 0)
+                {
+                    FHitResult& Hit = HitResult[0];
+                    float SphereOffsetFactor = 0.2f;
+                    FVector SphereLocation = FMath::Lerp(Hit.ImpactPoint, AllVectors[index].Value, SphereOffsetFactor);
+
+                    DrawDebugSphere(GetWorld(), SphereLocation, 50.0f, 4, FColor::Purple, false,
+                             0.01f, 0, 1);
+                    
+                    // DrawDebugLine(GetWorld(), AllVectors[index].Key, AllVectors[index].Value, DebugLineColor, false,
+                    //             0.1f, 0, 0.5f);
+                }
+                ++index;
+            }
+            GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ACustomEmitter::CheckObstruction);
+        }
     }
 }
