@@ -112,6 +112,8 @@ void ACustomEmitter::CheckObstruction()
                     
                     // DrawDebugLine(GetWorld(), AllVectors[index].Key, AllVectors[index].Value, DebugLineColor, false,
                     //             0.1f, 0, 0.5f);
+
+                    // Wrap the debug sphere and line commands to a console command or a debug menu
                 }
                 ++index;
             }
