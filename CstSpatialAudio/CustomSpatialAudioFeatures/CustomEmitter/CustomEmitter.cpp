@@ -9,8 +9,8 @@ ACustomEmitter::ACustomEmitter() :
 ObstructionCheckInterval(1.0f),
 TargetLowPassFrequency(20000.0f),
 InterpolationAlpha(0.0f),
-prevTargetFrequency(0.0f),
-transitionTime(1.0f)
+PrevTargetFrequency(0.0f),
+TransitionTime(1.0f)
 {
     PrimaryActorTick.bCanEverTick = true;
     AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
@@ -25,32 +25,30 @@ void ACustomEmitter::BeginPlay()
 void ACustomEmitter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    elapsedTime += DeltaTime;
-    const float LerpRatio = FMath::Clamp(elapsedTime / transitionTime, 0.0f, 1.0f);
-    prevTargetFrequency = FMath::Lerp(prevTargetFrequency, TargetLowPassFrequency, LerpRatio);
-    AudioComponent->SetLowPassFilterFrequency(prevTargetFrequency);
+    ElapsedTime += DeltaTime;
+    const float LerpRatio = FMath::Clamp(ElapsedTime / TransitionTime, 0.0f, 1.0f);
+    PrevTargetFrequency = FMath::Lerp(PrevTargetFrequency, TargetLowPassFrequency, LerpRatio);
+    AudioComponent->SetLowPassFilterFrequency(PrevTargetFrequency);
     if (LerpRatio >= 1.0f)
-    {
-        elapsedTime = 0.0f;
-    }
+        ElapsedTime = 0.0f;
 }
 
 void ACustomEmitter::CheckObstruction()
 {
-    APlayerCameraManager* PCM = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+    APlayerCameraManager* PlayerCameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 
-    float dist = UE::Geometry::Distance(PCM->GetCameraLocation(), AudioComponent->GetComponentLocation());
-    bool isInRadius = AudioComponent->AttenuationOverrides.FalloffDistance >= dist;
-    if(CameraCacheLocation != PCM->GetCameraLocation() && isInRadius)
+    float DistanceCameraEmitter = UE::Geometry::Distance(PlayerCameraManager->GetCameraLocation(), AudioComponent->GetComponentLocation());
+    bool IsEmitterInFallOffDistance = AudioComponent->AttenuationOverrides.FalloffDistance >= DistanceCameraEmitter;
+    
+    if(CameraCacheLocation != PlayerCameraManager->GetCameraLocation() && IsEmitterInFallOffDistance)
     {
-        CameraCacheLocation = PCM->GetCameraLocation();
+        CameraCacheLocation = PlayerCameraManager->GetCameraLocation();
         TArray<FHitResult> HitResults1, HitResults2, HitResults3;
 
         FVector Start = GetActorLocation();
-        FVector End = PCM->GetCameraLocation(); 
-        float Distance = FVector::Dist(Start, End);
+        FVector End = PlayerCameraManager->GetCameraLocation(); 
 
-        FVector CameraRightVector = PCM->GetActorRightVector();
+        FVector CameraRightVector = PlayerCameraManager->GetActorRightVector();
         float YourDesiredOffset = 100.0f;
 
         FVector Offset = CameraRightVector * YourDesiredOffset;
@@ -71,14 +69,12 @@ void ACustomEmitter::CheckObstruction()
         bool bHit3 = GetWorld()->LineTraceMultiByChannel(HitResults3, Start3, End3, AudioTraceChannel);
         
         // Array to store all hit results
-        TArray<TArray<FHitResult>> AllHitResults = {HitResults1, HitResults2, HitResults3};
+        TArray AllHitResults = {HitResults1, HitResults2, HitResults3};
         // Array to store all start and end vectors
         TArray<TPair<FVector, FVector>> AllVectors = {{Start1, End1}, {Start2, End2}, {Start3, End3}};
 
         int index = 0;
-        const FColor DebugLineColor = FColor::Red;
-
-        bool isOneLineHit = false;
+        
         bool isTwoLineHit = false;
         bool isThreeLineHit = false;
         
@@ -87,9 +83,6 @@ void ACustomEmitter::CheckObstruction()
 
         if(bHit1 && bHit2 && bHit3)
             isThreeLineHit = true;
-
-        if (bHit1 || bHit2 || bHit3)
-            isOneLineHit = true;
         
         if (isThreeLineHit)
         {

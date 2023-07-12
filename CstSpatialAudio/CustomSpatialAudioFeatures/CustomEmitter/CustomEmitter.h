@@ -17,22 +17,21 @@ public:
 	float ObstructionCheckInterval; 
 
 protected:
-
 	virtual void BeginPlay() override;
+
 	
 	UPROPERTY(VisibleAnywhere)
 	class UAudioComponent* AudioComponent;
-
 	UPROPERTY()
 	float TargetLowPassFrequency;
 	UPROPERTY()
 	float InterpolationAlpha;
 	UPROPERTY()
-	float prevTargetFrequency;
+	float PrevTargetFrequency;
 	UPROPERTY()
-	float transitionTime;
+	float TransitionTime;
 	UPROPERTY()
-	float elapsedTime = 0.0f;
+	float ElapsedTime = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
 	bool DrawSphereAndLines = false;
 	FTimerHandle CheckObstructionTimer;
