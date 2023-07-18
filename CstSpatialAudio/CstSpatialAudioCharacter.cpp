@@ -1,6 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CstSpatialAudioCharacter.h"
+
+#include <string>
+
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
@@ -9,12 +12,14 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 
 //////////////////////////////////////////////////////////////////////////
 // ACstSpatialAudioCharacter
 
-ACstSpatialAudioCharacter::ACstSpatialAudioCharacter()
+ACstSpatialAudioCharacter::ACstSpatialAudioCharacter() :
+offset(50.0f)
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -66,6 +71,44 @@ void ACstSpatialAudioCharacter::BeginPlay()
 	}
 }
 
+void ACstSpatialAudioCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	checkSurfaceUnderCharacter();
+}
+
+void ACstSpatialAudioCharacter::checkSurfaceUnderCharacter() const
+{
+	// Offset the foot locations according to your character's foot positions
+	FVector LeftFootLocation = this->GetMesh()->GetSocketLocation("ik_foot_l"); 
+	FVector RightFootLocation = this->GetMesh()->GetSocketLocation("ik_foot_r");
+
+	FVector TraceEnd = LeftFootLocation - FVector(0.f, 0.f, 1000.f); 
+
+	FHitResult OutHitLeft, OutHitRight;
+
+	// Perform the line trace for the left foot
+	if(GetWorld()->LineTraceSingleByChannel(OutHitLeft, LeftFootLocation, TraceEnd, ECC_Visibility))
+	{
+		if(OutHitLeft.GetActor() != nullptr && OutHitLeft.PhysMaterial.IsValid())
+		{
+			UPhysicalMaterial* PhysMaterial = OutHitLeft.PhysMaterial.Get();
+			UE_LOG(LogTemp, Warning, TEXT("Left foot is on material: %s"), *PhysMaterial->GetName());
+		}
+	}
+
+	// Perform the line trace for the right foot
+	if(GetWorld()->LineTraceSingleByChannel(OutHitRight, RightFootLocation, TraceEnd, ECC_Visibility))
+	{
+		if(OutHitRight.GetActor() != nullptr && OutHitRight.PhysMaterial.IsValid())
+		{
+			UPhysicalMaterial* PhysMaterial = OutHitRight.PhysMaterial.Get();
+			UE_LOG(LogTemp, Warning, TEXT("Right foot is on material: %s"), *PhysMaterial->GetName());
+		}
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -83,7 +126,6 @@ void ACstSpatialAudioCharacter::SetupPlayerInputComponent(class UInputComponent*
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACstSpatialAudioCharacter::Look);
-
 	}
 
 }

@@ -13,15 +13,16 @@ class CSTSPATIALAUDIO_API ACustomEmitter : public AActor
 public:	
 	ACustomEmitter();
 	virtual void Tick(float DeltaTime) override;
-	void CheckObstruction();
-	float ObstructionCheckInterval; 
+	float ObstructionCheckInterval;
+	UPROPERTY()
+	class UAudioComponent* AudioComponent;
 
 protected:
 	virtual void BeginPlay() override;
 
 	
-	UPROPERTY(VisibleAnywhere)
-	class UAudioComponent* AudioComponent;
+	//UPROPERTY(VisibleAnywhere)
+	
 	UPROPERTY()
 	float TargetLowPassFrequency;
 	UPROPERTY()
