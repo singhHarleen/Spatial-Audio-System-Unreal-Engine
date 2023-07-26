@@ -13,13 +13,11 @@ class CSTSPATIALAUDIO_API AObstructionManager : public AActor
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	AObstructionManager();
 	void RegisterEmitter(ACustomEmitter* CustomEmitter);
 	void CheckObstruction(ACustomEmitter* Emitter);
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	FVector CameraCacheLocation;
 
@@ -39,6 +37,5 @@ private:
 	int32 CurrentEmitterIndex;
 	int32 CurrenTick;
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 };

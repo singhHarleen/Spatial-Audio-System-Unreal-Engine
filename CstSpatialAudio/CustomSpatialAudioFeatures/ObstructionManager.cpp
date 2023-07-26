@@ -123,4 +123,3 @@ void AObstructionManager::Tick(float DeltaTime)
 		}
 	}
 }
-

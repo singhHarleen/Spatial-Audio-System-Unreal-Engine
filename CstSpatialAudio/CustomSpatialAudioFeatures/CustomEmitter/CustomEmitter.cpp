@@ -1,9 +1,7 @@
 #include "CustomEmitter.h"
 #include "CoreMinimal.h"
 #include "EngineUtils.h"
-#include "VectorTypes.h"
 #include "GameFramework/Actor.h"
-#include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
 #include "CstSpatialAudio/CustomSpatialAudioFeatures/ObstructionManager.h"
 
