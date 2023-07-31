@@ -5,9 +5,15 @@
 #include "Kismet/GameplayStatics.h"
 
 AObstructionManager::AObstructionManager() :
-ObstructionCheckFrequency(15)
+ObstructionCheckFrequency(3)
 {
 	PrimaryActorTick.bCanEverTick = true;
+	CurrenTick = 0.0f;
+}
+
+void AObstructionManager::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 void AObstructionManager::RegisterEmitter(ACustomEmitter* CustomEmitter)
@@ -18,19 +24,21 @@ void AObstructionManager::RegisterEmitter(ACustomEmitter* CustomEmitter)
 
 void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 {
-	APlayerCameraManager* PlayerCameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+	// for (auto Emitter : Emitters)
+	// {
+		APlayerCameraManager* PlayerCameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 
-    float DistanceCameraEmitter = UE::Geometry::Distance(PlayerCameraManager->GetCameraLocation(), CustomEmitter->AudioComponent->GetComponentLocation());
-    bool IsEmitterInFallOffDistance = CustomEmitter->AudioComponent->AttenuationOverrides.FalloffDistance >= DistanceCameraEmitter;
+		const float DistanceCameraEmitter = UE::Geometry::Distance(PlayerCameraManager->GetCameraLocation(), CustomEmitter->AudioComponent->GetComponentLocation());
+		bool IsEmitterInFallOffDistance = CustomEmitter->AudioComponent->AttenuationOverrides.FalloffDistance >= DistanceCameraEmitter;
     
-    if(CameraCacheLocation != PlayerCameraManager->GetCameraLocation() && IsEmitterInFallOffDistance)
-    {
+    // if(CameraCacheLocation != PlayerCameraManager->GetCameraLocation() && IsEmitterInFallOffDistance)
+    // {
         CameraCacheLocation = PlayerCameraManager->GetCameraLocation();
         TArray<FHitResult> HitResults1, HitResults2, HitResults3;
 
-        FVector Start = GetActorLocation();
-        FVector End = PlayerCameraManager->GetCameraLocation(); 
-
+        FVector Start = CustomEmitter->GetActorLocation();
+        FVector End = PlayerCameraManager->GetCameraLocation();
+		
         FVector CameraRightVector = PlayerCameraManager->GetActorRightVector();
         float YourDesiredOffset = 100.0f;
 
@@ -68,18 +76,13 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
             isThreeLineHit = true;
         
         if (isThreeLineHit)
-        {
             TargetLowPassFrequency = 2000.0f;
-        }
         else if(isTwoLineHit)
-        {
             TargetLowPassFrequency = 4000.0f;
-        }
         else
-        {
             TargetLowPassFrequency = 20000.0f;
-        }
-        
+
+    	DrawSphereAndLines = true;
         if (isTwoLineHit && DrawSphereAndLines)
         {
             for (auto& HitResult : AllHitResults)
@@ -90,23 +93,18 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
                     float SphereOffsetFactor = 0.2f;
                     FVector SphereLocation = FMath::Lerp(Hit.ImpactPoint, AllVectors[index].Value, SphereOffsetFactor);
 
-                    DrawDebugSphere(GetWorld(), SphereLocation, 50.0f, 4, FColor::Purple, false,
-                             0.01f, 0, 1);
+                    DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 100.0f, 4, FColor::Purple, false,
+                             0.1f, 0, 5);
                     
-                    // DrawDebugLine(GetWorld(), AllVectors[index].Key, AllVectors[index].Value, DebugLineColor, false,
+                    // DrawDebugLine(GetWorld(), AllVectors[index].Key, AllVectors[index].Value, FColor::Red, false,
                     //             0.1f, 0, 0.5f);
-
                     // Wrap the debug sphere and line commands to a console command or a debug menu
                 }
-                ++index;
+                ++index; 
             }
         }
-    }
-}
-
-void AObstructionManager::BeginPlay()
-{
-	Super::BeginPlay();
+    // }
+	// }
 }
 
 void AObstructionManager::Tick(float DeltaTime)
@@ -116,10 +114,11 @@ void AObstructionManager::Tick(float DeltaTime)
 
 	if (CurrenTick >= ObstructionCheckFrequency)
 	{
-		if(Emitters.Num() > 0)
+		if (Emitters.Num() > 0)
 		{
 			CheckObstruction(Emitters[CurrentEmitterIndex]);
-			CurrentEmitterIndex = (CurrentEmitterIndex + 1) % Emitters.Num();
+				CurrentEmitterIndex = (CurrentEmitterIndex + 1) % Emitters.Num();
 		}
+		CurrenTick = 0.0f;
 	}
 }

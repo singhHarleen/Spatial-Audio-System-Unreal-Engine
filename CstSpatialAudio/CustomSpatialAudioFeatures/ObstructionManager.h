@@ -30,7 +30,9 @@ protected:
 	UPROPERTY()
 	float TransitionTime;
 	bool DrawSphereAndLines = false;
-	int32 ObstructionCheckFrequency; 
+	int32 ObstructionCheckFrequency;
+
+	ACustomEmitter* CurrentlyProcessedEmitter = nullptr;
 private:
 	UPROPERTY()
 	TArray<ACustomEmitter*> Emitters;
