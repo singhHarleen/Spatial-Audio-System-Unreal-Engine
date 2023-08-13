@@ -9,6 +9,7 @@ DebugSphereRadius(50.0f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	CurrenTick = 0.0f;
+	
 }
 
 void AObstructionManager::BeginPlay()	
@@ -31,11 +32,12 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 		const float DistanceCameraEmitter = UE::Geometry::Distance(PlayerCameraManager->GetCameraLocation(),
 											CustomEmitter->AudioComponent->GetComponentLocation());
 
-		const bool IsEmitterInFallOffDistance = CustomEmitter->AudioComponent->AttenuationOverrides.FalloffDistance >= DistanceCameraEmitter;
+		const bool IsListenerInFallOffRange = CustomEmitter->AudioComponent->AttenuationOverrides.FalloffDistance >= DistanceCameraEmitter;
+		JustEnteredFalloffDistance = WasOutsideFalloffDistance && IsListenerInFallOffRange;
 		
-		if (IsEmitterInFallOffDistance)
+		if (IsListenerInFallOffRange)
 		{
-			// if (CameraCacheLocation != PlayerCameraManager->GetCameraLocation() ||
+			 	// if (CameraCacheLocation != PlayerCameraManager->GetCameraLocation() ||
 			//    EmitterCacheLocatin != Emitter->GetActorLocation())
 		 //    {
 		        CameraCacheLocation = PlayerCameraManager->GetCameraLocation();
@@ -98,6 +100,22 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 		        else
 		            TargetLowPassFrequency = NoFiltering;
 
+
+				const float LerpRatio = FMath::Clamp(ElapsedTime / TransitionTime, 0.0f, 1.0f);
+				if (JustEnteredFalloffDistance)
+				{
+					Emitter->AudioComponent->SetLowPassFilterFrequency(TargetLowPassFrequency);
+				}
+				else
+				{
+					PrevTargetFrequency = FMath::Lerp(PrevTargetFrequency, TargetLowPassFrequency, LerpRatio);
+					Emitter->AudioComponent->SetLowPassFilterFrequency(PrevTargetFrequency);
+				}
+				if (LerpRatio >= 1.0f)
+					ElapsedTime = 0.0f;
+
+				UE_LOG(LogTemp, Warning, TEXT("The current filter value is: %f"), TargetLowPassFrequency);
+			
     			DrawSphereAndLines = true;
 		        if (isTwoLineHit && DrawSphereAndLines)
 		        {
@@ -115,14 +133,19 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 		                    
 		                    DrawDebugLine(GetWorld(), AllVectors[Index].Key, AllVectors[Index].Value, FColor::Red, false,
 		                                0.1f, 0, 0.5f);
-		                    // Wrap the debug sphere and line commands to a console command or a debug menu
 		                }
 		                ++Index; 
 		            }
 		        }
 		    // }	
 		}
+		WasOutsideFalloffDistance = !IsListenerInFallOffRange;
 	}
+}
+
+void AObstructionManager::ApplyObstruction(ACustomEmitter* Emitter, bool HasJustEnteredFalloffRange)
+{
+	
 }
 
 void AObstructionManager::Tick(float DeltaTime)

@@ -16,6 +16,7 @@ public:
 	AObstructionManager();
 	void RegisterEmitter(ACustomEmitter* CustomEmitter);
 	void CheckObstruction(ACustomEmitter* Emitter);
+	void ApplyObstruction(ACustomEmitter* Emitter, bool HasJustEnteredFalloffRange);
 
 protected:
 	virtual void BeginPlay() override;
@@ -33,8 +34,12 @@ protected:
 	bool DrawSphereAndLines = false;
 	int32 ObstructionCheckFrequency;
 	float DebugSphereRadius;
+	bool WasOutsideFalloffDistance = true;
+	bool JustEnteredFalloffDistance = false;
 	
 	ACustomEmitter* CurrentlyProcessedEmitter = nullptr;
+	UPROPERTY()
+	float ElapsedTime = 0.0f;
 private:
 	UPROPERTY()
 	TArray<ACustomEmitter*> Emitters;
