@@ -20,6 +20,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	FVector CameraCacheLocation;
+	FVector EmitterCacheLocatin;
 
 	UPROPERTY()
 	float TargetLowPassFrequency;
@@ -31,13 +32,19 @@ protected:
 	float TransitionTime;
 	bool DrawSphereAndLines = false;
 	int32 ObstructionCheckFrequency;
-
+	float DebugSphereRadius;
+	
 	ACustomEmitter* CurrentlyProcessedEmitter = nullptr;
 private:
 	UPROPERTY()
 	TArray<ACustomEmitter*> Emitters;
 	int32 CurrentEmitterIndex;
 	int32 CurrenTick;
+	static constexpr  float MaxFiltering = 2000.0f;
+	static constexpr float MidFiltering = 4000.0f;
+	static constexpr float NoFiltering = 20000.0f;
+
+
 public:
 	virtual void Tick(float DeltaTime) override;
 };

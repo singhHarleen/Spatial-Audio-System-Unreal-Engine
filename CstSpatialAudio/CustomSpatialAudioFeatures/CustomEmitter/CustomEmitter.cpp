@@ -43,4 +43,3 @@ void ACustomEmitter::Tick(float DeltaTime)
     if (LerpRatio >= 1.0f)
         ElapsedTime = 0.0f;
 }
-

@@ -15,11 +15,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	float ObstructionCheckInterval;
 	UPROPERTY()
-	class UAudioComponent* AudioComponent;
+	UAudioComponent* AudioComponent;
 
 protected:
 	virtual void BeginPlay() override;
-	
 	UPROPERTY()
 	float TargetLowPassFrequency;
 	UPROPERTY()
