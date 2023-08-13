@@ -113,11 +113,8 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 				}
 				if (LerpRatio >= 1.0f)
 					ElapsedTime = 0.0f;
-
-				UE_LOG(LogTemp, Warning, TEXT("The current filter value is: %f"), TargetLowPassFrequency);
 			
-    			DrawSphereAndLines = true;
-		        if (isTwoLineHit && DrawSphereAndLines)
+		        if (isTwoLineHit && DrawObstructionDebug)
 		        {
 			        int Index = 0;
 			        for (auto& HitResult : AllHitResults)
@@ -143,11 +140,6 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 	}
 }
 
-void AObstructionManager::ApplyObstruction(ACustomEmitter* Emitter, bool HasJustEnteredFalloffRange)
-{
-	
-}
-
 void AObstructionManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -163,3 +155,11 @@ void AObstructionManager::Tick(float DeltaTime)
 		CurrenTick = 0.0f;
 	}
 }
+
+void AObstructionManager::ToggleDebugFlag()
+{
+	DrawObstructionDebug = !DrawObstructionDebug;
+}
+
+bool AObstructionManager::DrawObstructionDebug = false;
+

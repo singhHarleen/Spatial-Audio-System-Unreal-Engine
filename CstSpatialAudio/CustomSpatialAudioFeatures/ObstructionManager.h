@@ -16,8 +16,6 @@ public:
 	AObstructionManager();
 	void RegisterEmitter(ACustomEmitter* CustomEmitter);
 	void CheckObstruction(ACustomEmitter* Emitter);
-	void ApplyObstruction(ACustomEmitter* Emitter, bool HasJustEnteredFalloffRange);
-
 protected:
 	virtual void BeginPlay() override;
 	FVector CameraCacheLocation;
@@ -31,7 +29,6 @@ protected:
 	float PrevTargetFrequency;
 	UPROPERTY()
 	float TransitionTime;
-	bool DrawSphereAndLines = false;
 	int32 ObstructionCheckFrequency;
 	float DebugSphereRadius;
 	bool WasOutsideFalloffDistance = true;
@@ -48,8 +45,10 @@ private:
 	static constexpr  float MaxFiltering = 2000.0f;
 	static constexpr float MidFiltering = 4000.0f;
 	static constexpr float NoFiltering = 20000.0f;
-
+	
 
 public:
 	virtual void Tick(float DeltaTime) override;
+	static bool DrawObstructionDebug;
+	void ToggleDebugFlag();
 };
