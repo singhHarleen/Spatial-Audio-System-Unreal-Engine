@@ -13,6 +13,7 @@ class CSTSPATIALAUDIO_API AObstructionManager : public AActor
 	GENERATED_BODY()
 
 public:
+	static const int32 HitChecksCount;
 	AObstructionManager();
 	void RegisterEmitter(ACustomEmitter* CustomEmitter);
 	void CheckObstruction(ACustomEmitter* Emitter);
@@ -48,6 +49,8 @@ private:
 	static constexpr float ThreeHitFilter = 8000.0f;
 	static constexpr  float TwoHitFilter = 12000.0f;
 	static constexpr float NoFiltering = 20000.0f;
+
+	void UpdateFrequency(int HitCount);
 	
 
 public:

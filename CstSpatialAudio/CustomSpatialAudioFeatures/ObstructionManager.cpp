@@ -3,6 +3,9 @@
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+bool AObstructionManager::DrawObstructionDebug = false;
+const int32 AObstructionManager::HitChecksCount = 5;
+
 AObstructionManager::AObstructionManager() :
 ObstructionCheckFrequency(3),
 DebugSphereRadius(50.0f)
@@ -67,7 +70,7 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 		        											{Start3, End3}, {Start4, End4},
 															{Start5, End5}};
 		
-			bool boolHits[5];
+			bool boolHits[HitChecksCount];
 			
 			boolHits[0] = GetWorld()->LineTraceMultiByChannel(AllHitResults[0], Start1, End1, AudioTraceChannel);
 			boolHits[1] = GetWorld()->LineTraceMultiByChannel(AllHitResults[1], Start2, End2, AudioTraceChannel);
@@ -77,32 +80,15 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 
 			int HitCount = 0;
 
-			for (int i = 0; i < 5; i++)
+			for (int i = 0; i < HitChecksCount; i++)
 			{
 				if (boolHits[i])
 				{
 					HitCount++;	
 				}
 			}
-		
-		    switch (HitCount)
-		    {
-		    case 5:
-			    TargetLowPassFrequency = FiveHitFilter;
-			    break;
-		    case 4:
-			    TargetLowPassFrequency = FourHitFilter;
-			    break;
-		    case 3:
-			    TargetLowPassFrequency = ThreeHitFilter;
-			    break;
-		    case 2:
-			    TargetLowPassFrequency = TwoHitFilter;
-			    break;
-	        default:
-				TargetLowPassFrequency = NoFiltering;
-		        break;
-		    }
+
+			UpdateFrequency(HitCount);
 		
 			const float LerpRatio = FMath::Clamp(ElapsedTime / TransitionTime, 0.0f, 1.0f);
 			if (JustEnteredFalloffDistance)
@@ -141,6 +127,28 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 	WasOutsideFalloffDistance = !IsListenerInFallOffRange;
 }
 
+void AObstructionManager::UpdateFrequency(int HitCount)
+{
+	switch (HitCount)
+	{
+	case 5:
+		TargetLowPassFrequency = FiveHitFilter;
+		break;
+	case 4:
+		TargetLowPassFrequency = FourHitFilter;
+		break;
+	case 3:
+		TargetLowPassFrequency = ThreeHitFilter;
+		break;
+	case 2:
+		TargetLowPassFrequency = TwoHitFilter;
+		break;
+	default:
+		TargetLowPassFrequency = NoFiltering;
+		break;
+	}
+}
+
 void AObstructionManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -161,5 +169,3 @@ void AObstructionManager::ToggleDebugFlag()
 {
 	DrawObstructionDebug = !DrawObstructionDebug;
 }
-
-bool AObstructionManager::DrawObstructionDebug = false;
