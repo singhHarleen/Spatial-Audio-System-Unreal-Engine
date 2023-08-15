@@ -18,8 +18,6 @@ public:
 	void CheckObstruction(ACustomEmitter* Emitter);
 protected:
 	virtual void BeginPlay() override;
-	FVector CameraCacheLocation;
-	FVector EmitterCacheLocatin;
 
 	UPROPERTY()
 	float TargetLowPassFrequency;
@@ -29,12 +27,15 @@ protected:
 	float PrevTargetFrequency;
 	UPROPERTY()
 	float TransitionTime;
+
+	UPROPERTY()
+	float LineTraceOffset = 100.0f;
+	
 	int32 ObstructionCheckFrequency;
 	float DebugSphereRadius;
 	bool WasOutsideFalloffDistance = true;
 	bool JustEnteredFalloffDistance = false;
 	
-	ACustomEmitter* CurrentlyProcessedEmitter = nullptr;
 	UPROPERTY()
 	float ElapsedTime = 0.0f;
 private:
@@ -52,5 +53,5 @@ private:
 public:
 	virtual void Tick(float DeltaTime) override;
 	static bool DrawObstructionDebug;
-	void ToggleDebugFlag();
+	static void ToggleDebugFlag();
 };
