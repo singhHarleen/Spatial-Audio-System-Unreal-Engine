@@ -42,8 +42,10 @@ private:
 	TArray<ACustomEmitter*> Emitters;
 	int32 CurrentEmitterIndex;
 	int32 CurrenTick;
-	static constexpr  float MaxFiltering = 2000.0f;
-	static constexpr float MidFiltering = 4000.0f;
+	static constexpr  float FiveHitFilter = 2000.0f;
+	static constexpr float FourHitFilter = 4000.0f;
+	static constexpr float ThreeHitFilter = 8000.0f;
+	static constexpr  float TwoHitFilter = 12000.0f;
 	static constexpr float NoFiltering = 20000.0f;
 	
 

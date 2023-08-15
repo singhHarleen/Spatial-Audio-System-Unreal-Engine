@@ -25,8 +25,8 @@ void AObstructionManager::RegisterEmitter(ACustomEmitter* CustomEmitter)
 
 void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 {
-	for (auto Emitter : Emitters)
-	{
+	// for (auto Emitter : Emitters)
+	// {
 		APlayerCameraManager* PlayerCameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
 
 		const float DistanceCameraEmitter = UE::Geometry::Distance(PlayerCameraManager->GetCameraLocation(),
@@ -41,7 +41,7 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 			//    EmitterCacheLocatin != Emitter->GetActorLocation())
 		 //    {
 		        CameraCacheLocation = PlayerCameraManager->GetCameraLocation();
-				EmitterCacheLocatin = Emitter->GetActorLocation();
+				EmitterCacheLocatin = CustomEmitter->GetActorLocation();
 
 				TArray<FHitResult> HitResults1, HitResults2, HitResults3, HitResults4, HitResults5;
 
@@ -70,51 +70,68 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 				FVector End5 = End - OffsetUp;
 
 		        ECollisionChannel AudioTraceChannel = ECollisionChannel::ECC_GameTraceChannel1;
-
-		        bool bHit1 = GetWorld()->LineTraceMultiByChannel(HitResults1, Start1, End1, AudioTraceChannel);
-		        bool bHit2 = GetWorld()->LineTraceMultiByChannel(HitResults2, Start2, End2, AudioTraceChannel);
-		        bool bHit3 = GetWorld()->LineTraceMultiByChannel(HitResults3, Start3, End3, AudioTraceChannel);
-				bool bHit4 = GetWorld()->LineTraceMultiByChannel(HitResults4, Start4, End4, AudioTraceChannel);
-				bool bHit5 = GetWorld()->LineTraceMultiByChannel(HitResults5, Start5, End5, AudioTraceChannel);
+			
 			
 		        // Array to store all hit results
-		        TArray AllHitResults = {HitResults1, HitResults2, HitResults3, HitResults4, HitResults5};
+				TArray<FHitResult> AllHitResults[5];
 		        // Array to store all start and end vectors
 		        TArray<TPair<FVector, FVector>> AllVectors = {{Start1, End1}, {Start2, End2},
 		        												{Start3, End3}, {Start4, End4},
 																{Start5, End5}};
 
-		        bool isTwoLineHit = false;
-		        bool isThreeLineHit = false;
-		        
-		        if (bHit1 && bHit2 || bHit2 && bHit3 || bHit1 && bHit3)
-		            isTwoLineHit = true;
 
-		        if(bHit1 && bHit2 && bHit3)
-		            isThreeLineHit = true;
-		        
-		        if (isThreeLineHit)
-		            TargetLowPassFrequency = MaxFiltering;
-		        else if(isTwoLineHit)
-		            TargetLowPassFrequency = MidFiltering;
-		        else
-		            TargetLowPassFrequency = NoFiltering;
+				bool boolHits[5];
+				
+				boolHits[0] = GetWorld()->LineTraceMultiByChannel(AllHitResults[0], Start1, End1, AudioTraceChannel);
+				boolHits[1] = GetWorld()->LineTraceMultiByChannel(AllHitResults[1], Start2, End2, AudioTraceChannel);
+				boolHits[2] = GetWorld()->LineTraceMultiByChannel(AllHitResults[2], Start3, End3, AudioTraceChannel);
+				boolHits[3] = GetWorld()->LineTraceMultiByChannel(AllHitResults[3], Start4, End4, AudioTraceChannel);
+				boolHits[4] = GetWorld()->LineTraceMultiByChannel(AllHitResults[4], Start5, End5, AudioTraceChannel);
 
+				
+				int HitCount = 0;
 
+				for (int i = 0; i < 5; i++)
+				{
+					if (boolHits[i])
+					{
+						HitCount++;	
+					}
+				}
+			
+			    switch (HitCount)
+			    {
+			    case 5:
+			    	TargetLowPassFrequency = FiveHitFilter;
+			    	break;
+			    case 4:
+			    	TargetLowPassFrequency = FourHitFilter;
+			    	break;
+			    case 3:
+			    	TargetLowPassFrequency = ThreeHitFilter;
+			    	break;
+			    case 2:
+			    	TargetLowPassFrequency = TwoHitFilter;
+			    	break;
+		        default:
+					TargetLowPassFrequency = NoFiltering;
+		        	break;
+			    }
+			
 				const float LerpRatio = FMath::Clamp(ElapsedTime / TransitionTime, 0.0f, 1.0f);
 				if (JustEnteredFalloffDistance)
 				{
-					Emitter->AudioComponent->SetLowPassFilterFrequency(TargetLowPassFrequency);
+					CustomEmitter->AudioComponent->SetLowPassFilterFrequency(TargetLowPassFrequency);
 				}
 				else
 				{
 					PrevTargetFrequency = FMath::Lerp(PrevTargetFrequency, TargetLowPassFrequency, LerpRatio);
-					Emitter->AudioComponent->SetLowPassFilterFrequency(PrevTargetFrequency);
+					CustomEmitter->AudioComponent->SetLowPassFilterFrequency(PrevTargetFrequency);
 				}
 				if (LerpRatio >= 1.0f)
 					ElapsedTime = 0.0f;
 			
-		        if (isTwoLineHit && DrawObstructionDebug)
+		        if (DrawObstructionDebug && HitCount >= 2)
 		        {
 			        int Index = 0;
 			        for (auto& HitResult : AllHitResults)
@@ -137,7 +154,7 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 		    // }	
 		}
 		WasOutsideFalloffDistance = !IsListenerInFallOffRange;
-	}
+	// }
 }
 
 void AObstructionManager::Tick(float DeltaTime)
