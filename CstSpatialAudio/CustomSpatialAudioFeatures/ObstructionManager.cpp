@@ -3,6 +3,8 @@
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+// Please note: A tick check would be removed to be replaced by a Timer so the check can be framerate-independent
+
 bool AObstructionManager::DrawObstructionDebug = false;
 const int32 AObstructionManager::HitChecksCount = 5;
 
