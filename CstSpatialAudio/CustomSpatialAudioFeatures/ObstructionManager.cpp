@@ -12,13 +12,15 @@ AObstructionManager::AObstructionManager() :
 ObstructionCheckFrequency(3),
 DebugSphereRadius(50.0f)
 {
-	PrimaryActorTick.bCanEverTick = true;
 	CurrenTick = 0.0f;
 }
 
 void AObstructionManager::BeginPlay()	
 {
 	Super::BeginPlay();
+
+	GetWorld()->GetTimerManager().SetTimer(ObstructionCheckTimerHandle, this, &AObstructionManager::ObstructionCheck,
+											ObstructionCheckFrequency, true);
 }
 
 void AObstructionManager::RegisterEmitter(ACustomEmitter* CustomEmitter)
@@ -129,6 +131,15 @@ void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)
 	WasOutsideFalloffDistance = !IsListenerInFallOffRange;
 }
 
+void AObstructionManager::ObstructionCheck()
+{
+	if (Emitters.Num() > 0)
+	{
+		CheckObstruction(Emitters[CurrentEmitterIndex]);
+		CurrentEmitterIndex = (CurrentEmitterIndex + 1) % Emitters.Num();
+	}
+}
+
 void AObstructionManager::UpdateFrequency(int HitCount)
 {
 	switch (HitCount)
@@ -154,17 +165,6 @@ void AObstructionManager::UpdateFrequency(int HitCount)
 void AObstructionManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	CurrenTick++;
-
-	if (CurrenTick >= ObstructionCheckFrequency)
-	{
-		if (Emitters.Num() > 0)
-		{
-			CheckObstruction(Emitters[CurrentEmitterIndex]);
-				CurrentEmitterIndex = (CurrentEmitterIndex + 1) % Emitters.Num();
-		}
-		CurrenTick = 0.0f;
-	}
 }
 
 void AObstructionManager::ToggleDebugFlag()

@@ -39,6 +39,8 @@ protected:
 	
 	UPROPERTY()
 	float ElapsedTime = 0.0f;
+
+	void ObstructionCheck();
 private:
 	UPROPERTY()
 	TArray<ACustomEmitter*> Emitters;
@@ -51,7 +53,7 @@ private:
 	static constexpr float NoFiltering = 20000.0f;
 
 	void UpdateFrequency(int HitCount);
-	
+	FTimerHandle ObstructionCheckTimerHandle;
 
 public:
 	virtual void Tick(float DeltaTime) override;
