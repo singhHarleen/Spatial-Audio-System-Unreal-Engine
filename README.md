@@ -1,5 +1,5 @@
 # CustomSpatialAudioFeatures
-Hi! This is a wip repo with some custom spatial audio systems that I am developing in Unreal Engine. 
+Hi! This is a repo with some custom spatial audio systems that I am developing in Unreal Engine. 
 
 Here is a basic overview: 
 1. Custom emitters cast five lines displaced vertically and horizontally from the listener.
