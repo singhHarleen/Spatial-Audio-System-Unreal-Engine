@@ -6,12 +6,16 @@
 #include "GameFramework/Actor.h"
 #include "CustomEmitter.generated.h"
 
+class AObstructionManager;
+
 UCLASS()
 class CSTSPATIALAUDIO_API ACustomEmitter : public AActor
 {
 	GENERATED_BODY()
 public:	
 	ACustomEmitter();
+	virtual ~ACustomEmitter() override;
+	
 	virtual void Tick(float DeltaTime) override;
 	float ObstructionCheckInterval;
 	UPROPERTY()
@@ -33,4 +37,6 @@ protected:
 	bool DrawSphereAndLines = false;
 	FTimerHandle CheckObstructionTimer;
 	FVector CameraCacheLocation;
+
+	AObstructionManager* ObstructionManager;
 };

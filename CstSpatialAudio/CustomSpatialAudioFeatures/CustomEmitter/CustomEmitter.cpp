@@ -15,12 +15,21 @@ TransitionTime(1.0f)
     PrimaryActorTick.bCanEverTick = true;
     AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
 }
+
+ACustomEmitter::~ACustomEmitter()
+{
+    if (ObstructionManager)
+    {
+        ObstructionManager->UnregisterEmitter(this);
+    }
+}
+
 void ACustomEmitter::BeginPlay()
 {
     Super::BeginPlay();
     AudioComponent->SetLowPassFilterEnabled(true);
-
-    AObstructionManager* ObstructionManager = nullptr;
+    ObstructionManager = nullptr;
+    
     for (TActorIterator<AObstructionManager> It(GetWorld()); It; ++It)
     {
         ObstructionManager = *It;

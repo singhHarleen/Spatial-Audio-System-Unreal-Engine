@@ -9,7 +9,7 @@ bool AObstructionManager::DrawObstructionDebug = false;
 const int32 AObstructionManager::HitChecksCount = 5;
 
 AObstructionManager::AObstructionManager() :
-ObstructionCheckFrequency(3),
+ObstructionCheckFrequency(0.01f),
 DebugSphereRadius(50.0f)
 {
 	CurrenTick = 0.0f;
@@ -26,6 +26,16 @@ void AObstructionManager::BeginPlay()
 void AObstructionManager::RegisterEmitter(ACustomEmitter* CustomEmitter)
 {
 	Emitters.Add(CustomEmitter);
+}
+
+void AObstructionManager::UnregisterEmitter(ACustomEmitter* CustomEmitter)
+{
+	Emitters.Remove(CustomEmitter);
+
+	if (CurrentEmitterIndex >= Emitters.Num())
+	{
+		CurrentEmitterIndex = 0;
+	}
 }
 
 void AObstructionManager::CheckObstruction(ACustomEmitter* CustomEmitter)

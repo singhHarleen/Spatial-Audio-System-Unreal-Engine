@@ -16,6 +16,7 @@ public:
 	static const int32 HitChecksCount;
 	AObstructionManager();
 	void RegisterEmitter(ACustomEmitter* CustomEmitter);
+	void UnregisterEmitter(ACustomEmitter* CustomEmitter);
 	void CheckObstruction(ACustomEmitter* Emitter);
 protected:
 	virtual void BeginPlay() override;
@@ -32,7 +33,7 @@ protected:
 	UPROPERTY()
 	float LineTraceOffset = 100.0f;
 	
-	int32 ObstructionCheckFrequency;
+	float ObstructionCheckFrequency;
 	float DebugSphereRadius;
 	bool WasOutsideFalloffDistance = true;
 	bool JustEnteredFalloffDistance = false;
