@@ -23,9 +23,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CustomEmitter/CustomEmitter.h"
+#include "../../../../UE_5.1/Engine/Source/Runtime/Core/Public/Containers/Array.h"
+#include "../../../../UE_5.1/Engine/Source/Runtime/Core/Public/Containers/Map.h"
+#include "../../../../UE_5.1/Engine/Source/Runtime/Engine/Classes/Engine/HitResult.h"
+#include "CustomEmitter/ACustomEmitter.h"
 #include "GameFramework/Actor.h"
 #include "ObstructionManager.generated.h"
+
+enum ECollisionChannel : int;
+class APlayerCameraManager;
+
+namespace ispc
+{
+	struct FVector;
+}
 
 UCLASS()
 class CSTSPATIALAUDIO_API AObstructionManager : public AActor
@@ -65,6 +76,8 @@ protected:
 private:
 	UPROPERTY()
 	TArray<ACustomEmitter*> Emitters;
+
+	ECollisionChannel AudioTraceChannel;
 	
 	int32 CurrentEmitterIndex;
 	
@@ -77,8 +90,22 @@ private:
 	static constexpr float NoFiltering = 20000.0f;
 
 	void UpdateFrequency(int HitCount);
+
+	TArray<TPair<FVector, FVector>> GenerateLineTraceVectors(ACustomEmitter* Emitter, APlayerCameraManager* PlayerCameraManager);
+	
+	APlayerCameraManager* PlayerCameraManager;
+
 	
 	FTimerHandle ObstructionCheckTimerHandle;
+
+	int PerformLineTraces(TArray<TPair<<Fector, FVector>>& Vectors, TArray<FHitResult> HitResults[]);
+
+	void UpdateLowPassFilterFrequency(ACustomEmitter* Emitter);
+
+#if !UE_BUILD_SHIPPING
+	void DrawDebugInfo(const TArray<FHitResult> HitResults, const TArray<TPair<FVector, FVector>>&Vectors, int HitCount);
+#endif
+	
 public:
 	virtual void Tick(float DeltaTime) override;
 	

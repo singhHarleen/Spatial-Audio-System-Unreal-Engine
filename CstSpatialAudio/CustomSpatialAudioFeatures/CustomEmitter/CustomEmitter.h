@@ -21,8 +21,8 @@
  */
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "../../../../../UE_5.1/Engine/Source/Runtime/Core/Public/CoreMinimal.h";
+#include "../../../../../UE_5.1/Engine/Source/Runtime/Engine/Classes/GameFramework/Actor.h"
 #include "CustomEmitter.generated.h"
 
 class AObstructionManager;
@@ -61,9 +61,10 @@ protected:
 	
 	bool DrawSphereAndLines = false;
 	
-	FTimerHandle CheckObstructionTimer;
+	// FTimerHandle CheckObstructionTimer;
 	
 	FVector CameraCacheLocation;
 
+	UPROPERTY()
 	AObstructionManager* ObstructionManager;
 };

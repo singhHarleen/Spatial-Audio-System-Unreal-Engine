@@ -21,11 +21,7 @@
  */
 
 #include "CustomEmitter.h"
-#include "CoreMinimal.h"
-#include "EngineUtils.h"
-#include "GameFramework/Actor.h"
-#include "Components/AudioComponent.h"
-#include "CstSpatialAudio/CustomSpatialAudioFeatures/ObstructionManager.h"
+
 
 ACustomEmitter::ACustomEmitter() :
 ObstructionCheckInterval(1.0f),
@@ -35,14 +31,14 @@ PrevTargetFrequency(0.0f),
 TransitionTime(1.0f)
 {
     PrimaryActorTick.bCanEverTick = true;
-    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent")); // Should this be created in Begin play instead?
 }
 
 ACustomEmitter::~ACustomEmitter()
 {
     if (ObstructionManager)
     {
-        ObstructionManager->UnregisterEmitter(this);
+        ObstructionManager->UnregisterEmitter(this); // Should this be handled in EndPlay? 
     }
 }
 
@@ -71,6 +67,9 @@ void ACustomEmitter::Tick(float DeltaTime)
     const float LerpRatio = FMath::Clamp(ElapsedTime / TransitionTime, 0.0f, 1.0f);
     PrevTargetFrequency = FMath::Lerp(PrevTargetFrequency, TargetLowPassFrequency, LerpRatio);
     AudioComponent->SetLowPassFilterFrequency(PrevTargetFrequency);
+
     if (LerpRatio >= 1.0f)
+    {
         ElapsedTime = 0.0f;
+    }
 }
